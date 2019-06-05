@@ -134,13 +134,7 @@ private:
     //          peut éventuellement valoir nullptr
     //
     static void deleteSubTree(Node* r) noexcept {
-        if (r) {
-            if (r->left)
-                deleteSubTree(r->left);
-            if (r->right)
-                deleteSubTree(r->right);
-            delete r;
-        }
+        /* ... */
     }
 
 public:
@@ -171,19 +165,34 @@ private:
     // la fonction peut modifier x, reçu par référence, si nécessaire
     //
     static bool insert(Node*& r, const_reference key) {
-
-        if(r == nullptr) {
+        //Si l'arbre est vide
+        if(r == nullptr){
             r = new Node(key);
-            return true;
-        } else if(key < r->key) {
-            return insert(r->left, key);
-        } else if(key > r->key) {
-            return insert(r->right, key);
         }
-        else{
+        else if(key > r->key){
+            if(r->right == nullptr){
+                //insertion de la nouvelle feuille
+                r->right = new Node(key);
+                r->nbElements++;
+                return true;
+            }
+            else
+                insert(r->right, key);
+        }else if(key < r->key){
+            if(r->left == nullptr) {
+                //insertion de la nouvelle feuille
+                r->left = new Node(key);
+                r->nbElements++;
+                return true;
+            }
+            else
+                insert(r->left, key);
+        }else{
             return false;
         }
+
     }
+
 
 public:
     //
@@ -210,24 +219,30 @@ private:
     // @return vrai si la cle trouvee, faux sinon.
     //
     static bool contains(Node* r, const_reference key) noexcept {
-        if(r) {
-            if(key == r->key)
-                return true;
-            if(key < r->key)
-                return contains(r->left, key);
-            else
-                return contains(r->right, key);
-        }
-        else{
+        //Si la racine pointe sur null l'arbre est soit vide, soit on a pas trouvé la valeur
+        if(r == nullptr)
             return false;
-        }
+        else if(key == r->key)
+            return true;
+        //si la valeur est plus grande que la clé de la racine on va verifier dans le sous arbre droit
+        else if(key > r->key)
+            contains(r->right, key);
+        //Sinon dans le sous arbre gauche
+        else
+            contains(r->left, key);
+
+
     }
 
-    static Node* findMinNode(Node* root){
-        if(root->left == nullptr)
-            return root;
-
-        return findMinNode(root->left);
+    static Node* minNode(Node* r){
+        if(r == nullptr)
+            throw std::logic_error("L'arbre est vide il n'y a donc pas de minimum");
+        else{
+            if(r->left == nullptr)
+                return r;
+            else
+                minNode(r->left);
+        }
     }
 
 public:
@@ -241,7 +256,7 @@ public:
     // vous pouvez mettre en oeuvre de manière iterative ou recursive a choix
     //
     const_reference min() const {
-        return findMinNode(_root)->key;
+        this->minNode(_root)->key;
     }
 
     //
@@ -252,26 +267,7 @@ public:
     // vous pouvez mettre en oeuvre de manière iterative ou recursive a choix
     //
     void deleteMin() {
-        Node* min = _root;
-        Node* tmp = nullptr;
-
-        if(min == nullptr)
-            return;
-
-        //le minimum est la racine
-        if(min->left == nullptr){
-            _root = min->right;
-            delete(min);
-            return;
-        }
-
-        // min est l'avant plus petit
-        while(min->left->left != nullptr)
-            min = min->left;
-
-        tmp = min->left;
-        min->left = min->left->right;
-        delete tmp;
+        /* ... */
     }
 
 
@@ -292,7 +288,6 @@ public:
     }
 
 private:
-
     //
     // @brief Supprime l'element de cle key du sous arbre.
     //
@@ -304,36 +299,8 @@ private:
     // retourne vrai
     //
     static bool deleteElement( Node*& r, const_reference key) noexcept {
-        if (r == nullptr)
-            return false;
-        if (key < r->key) {
-            return deleteElement(r->left, key);
-        } else if (key > r->key) {
-            return deleteElement(r->right, key);
-        } else if (r->key == key) { //element trouvé --> supprimer
-            Node *tmp = r;
-            if (r->right == nullptr) {
-                std::swap(r, r->left);
-                delete tmp;
-            } else if (r->left == nullptr) {
-                std::swap(r, r->right);
-                delete tmp;
-            } else {
-                //suppression hibbard
-                Node *min = r->right;
-                Node *parent = nullptr;
-                while (min->left != nullptr) {
-                    parent = min;
-                    min = min->left;
-                }
-                parent->left = min->right;
-                min->left = r->left;
-                min->right = r->right;
-                std::swap(r, min);
-                delete min;
-            }
-        }
-        return true;
+        /* ... */
+        return false;
     }
 
 public:
@@ -343,6 +310,7 @@ public:
     // @return le nombre d'elements de l'arbre
     //
     size_t size() const noexcept {
+        /* ... */
         return 0;
     }
 
@@ -476,33 +444,6 @@ private:
     static void arborize(Node*& tree, Node*& list, size_t cnt) noexcept {
     }
 
-    template < typename Fn>
-    void visitPre(Node* r, Fn f){
-        if(r != nullptr){
-            f(r->key);
-            visitPre(r->left, f);
-            visitPre(r->right, f);
-        }
-    }
-
-    template < typename Fn>
-    void visitsym(Node* r, Fn f){
-        if(r != nullptr){
-            visitsym(r->left, f);
-            f(r->key);
-            visitsym(r->right, f);
-        }
-    }
-
-    template < typename Fn>
-    void visitPost(Node* r, Fn f){
-        if(r != nullptr){
-            visitPost(r->left, f);
-            visitPost(r->right, f);
-            f(r->key);
-        }
-    }
-
 public:
     //
     // @brief Parcours pre-ordonne de l'arbre
@@ -513,9 +454,9 @@ public:
     //
     template < typename Fn >
     void visitPre (Fn f) {
-        visitPre(_root, f);
-
+        /* ... */
     }
+
     //
     // @brief Parcours symétrique de l'arbre
     //
@@ -525,7 +466,7 @@ public:
     //
     template < typename Fn >
     void visitSym (Fn f) {
-        visitsym(_root, f);
+        /* ... */
     }
 
     //
@@ -537,7 +478,7 @@ public:
     //
     template < typename Fn >
     void visitPost (Fn f) {
-        visitPost(_root, f);
+        /* ... */
     }
 
 
