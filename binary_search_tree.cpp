@@ -70,9 +70,19 @@ public:
      *  @param other le BinarySearchTree à copier
      *
      */
-    BinarySearchTree(BinarySearchTree &other)
+    BinarySearchTree(const BinarySearchTree &other)
     {
-        /* ... */
+        if(other._root){
+            try{
+                _root = new Node(other._root->key);
+                copyTree(other._root, _root);
+            }
+            catch(...){
+                deleteSubTree(_root);
+                _root = nullptr;
+                throw;
+            }
+        }
     }
 
     /**
@@ -83,7 +93,12 @@ public:
      */
     BinarySearchTree &operator=(const BinarySearchTree &other)
     {
-        /* ... */
+        Node* root = nullptr;
+        if(other._root){
+            root = new Node(other._root->key);
+            copyTree(other._root,root);
+        }
+        _root = root;
         return *this;
     }
 
@@ -95,7 +110,9 @@ public:
      */
     void swap(BinarySearchTree &other) noexcept
     {
-
+        Node* temp = _root;
+        _root = other._root;
+        other._root = temp;
     }
 
     /**
@@ -106,7 +123,9 @@ public:
      */
     BinarySearchTree(BinarySearchTree &&other) noexcept
     {
-        /* ... */
+        _root = other._root;
+        _root->nbElements = other._root->nbElements;
+        other._root = nullptr;
     }
 
     /**
@@ -117,7 +136,8 @@ public:
      */
     BinarySearchTree &operator=(BinarySearchTree &&other) noexcept
     {
-        /* ... */
+        _root = other._root;
+        other._root = nullptr;
         return *this;
     }
 
@@ -134,6 +154,26 @@ public:
 
 private:
     //
+    //@brief copie un BTS dans un autre
+    //@param src Racine du BTS a copier
+    //@param dest Racine du BTS copié
+    void copyTree(Node* src, Node* dest){
+        if(src){
+            dest->nbElements = src->nbElements;
+            if(src->left){
+                Node* leftNode = new Node(src->left->key);
+                dest->left = leftNode;
+                copyTree(src->left, dest->left);
+            }
+            if(src->right){
+                Node* rightNode = new Node(src->right->key);
+                dest->right = rightNode;
+                copyTree(src->right, dest->right);
+            }
+        }
+    }
+
+    //
     // @brief Fonction détruisant (delete) un sous arbre
     //
     // @param r la racine du sous arbre à détruire.
@@ -141,16 +181,12 @@ private:
     //
     static void deleteSubTree(Node *r) noexcept
     {
-        /* ... */
-        if (r == nullptr)
+        if(r)
         {
-            return;
+            deleteSubTree(r->left);
+            deleteSubTree(r->right);
+            delete r;
         }
-
-        deleteSubTree(r->left);
-        deleteSubTree(r->right);
-
-        delete r;
     }
 
 public:
@@ -429,9 +465,7 @@ public:
     size_t size() const noexcept
     {
 
-
-
-        return _root->nbElements;
+        return _root ? _root->nbElements : 0;
     }
 
     //
@@ -447,7 +481,9 @@ public:
     //
     const_reference nth_element(size_t n) const
     {
-        /* ... */
+        if(_root->nbElements < n){
+            throw std::out_of_range("L'arbre ne contient pas autant d'elements");
+        }
         return nth_element(_root, n);
     }
 
@@ -464,8 +500,24 @@ private:
     static const_reference nth_element(Node *r, size_t n) noexcept
     {
         assert(r != nullptr);
-        /* ... */
-        return -1;
+        size_t nbElementsGauche = 0;
+
+        if (r->left){
+            nbElementsGauche = r->left->nbElements;
+        }
+
+        //nième element dans le sous arbre gauche
+        if (n > nbElementsGauche) {
+            return nth_element(r->right, n - nbElementsGauche - 1);
+        }
+        //nième element dans le sous arbre droit
+        else if (n < nbElementsGauche) {
+            return nth_element(r->left, n);
+        }
+        //nième element est la racine
+        else {
+            return r->key;
+        }
     }
 
 public:
@@ -495,8 +547,24 @@ private:
     //
     static size_t rank(Node *r, const_reference key) noexcept
     {
-        /* ... */
-        return -1;
+        if (contains(r, key) && r!= nullptr) {
+            size_t nbElementsGauche = 0;
+
+            if (r->left) {
+                nbElementsGauche += r->left->nbElements;
+            }
+
+            if (key > r->key)
+                return rank(r->right, key) + nbElementsGauche + 1;
+              else if (key < r->key)
+                return rank(r->left, key);
+              else
+                return nbElementsGauche;
+            return -1;
+        }
+        else{
+            return -1;
+        }
     }
 
 public:
@@ -585,7 +653,7 @@ public:
     {
         visitPre(_root, f);
     }
-
+private:
     template <typename Fn>
     void visitPre(Node *r, Fn f)
     {
@@ -596,7 +664,7 @@ public:
             visitPre(r->right, f);
         }
     }
-
+public:
     //
     // @brief Parcours symétrique de l'arbre
     //
@@ -609,8 +677,8 @@ public:
     {
         visitSym(_root, f);
     }
+private:
     template <typename Fn>
-
     void visitSym(Node *r, Fn f)
     {
         if (r != nullptr)
@@ -621,6 +689,7 @@ public:
         }
     }
 
+public:
     //
     // @brief Parcours post-ordonne de l'arbre
     //
@@ -634,6 +703,7 @@ public:
         visitPost(_root, f);
     }
 
+private:
     template <typename Fn>
     void visitPost(Node *r, Fn f)
     {
@@ -644,7 +714,7 @@ public:
             f(r->key);
         }
     }
-
+public:
     //
     // Les fonctions suivantes sont fournies pour permettre de tester votre classe
     // Merci de ne rien modifier au dela de cette ligne
