@@ -110,9 +110,11 @@ public:
      */
     void swap(BinarySearchTree &other) noexcept
     {
-        Node* temp = _root;
-        _root = other._root;
-        other._root = temp;
+        if(_root != other._root){
+            Node *temp = _root;
+            _root = other._root;
+            other._root = temp;
+        }
     }
 
     /**
@@ -123,9 +125,12 @@ public:
      */
     BinarySearchTree(BinarySearchTree &&other) noexcept
     {
-        _root = other._root;
-        _root->nbElements = other._root->nbElements;
-        other._root = nullptr;
+        if(other._root){
+            _root = other._root;
+            other._root = nullptr;
+        }else{
+            _root = nullptr;
+        }
     }
 
     /**
@@ -136,8 +141,12 @@ public:
      */
     BinarySearchTree &operator=(BinarySearchTree &&other) noexcept
     {
-        _root = other._root;
-        other._root = nullptr;
+        if(_root != other._root){
+            _root = other._root;
+            other._root = nullptr;
+        }else if(other._root){
+            _root = nullptr;
+        }
         return *this;
     }
 
@@ -554,12 +563,13 @@ private:
                 nbElementsGauche += r->left->nbElements;
             }
 
-            if (key > r->key)
+            if (key > r->key){
                 return rank(r->right, key) + nbElementsGauche + 1;
-              else if (key < r->key)
+            } else if (key < r->key){
                 return rank(r->left, key);
-              else
+            }else{
                 return nbElementsGauche;
+            }
             return -1;
         }
         else{
@@ -677,6 +687,7 @@ public:
     {
         visitSym(_root, f);
     }
+
 private:
     template <typename Fn>
     void visitSym(Node *r, Fn f)
@@ -714,6 +725,7 @@ private:
             f(r->key);
         }
     }
+
 public:
     //
     // Les fonctions suivantes sont fournies pour permettre de tester votre classe
