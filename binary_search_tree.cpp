@@ -95,7 +95,7 @@ public:
      */
     void swap(BinarySearchTree &other) noexcept
     {
-        /* ... */
+
     }
 
     /**
@@ -183,10 +183,14 @@ private:
     //
     static bool insert(Node *&r, const_reference key)
     {
+        if(contains(r, key)){
+            return false;
+        }
         //Si l'arbre est vide
-        if (r == nullptr)
+        else if (r == nullptr)
         {
             r = new Node(key);
+            return true;
         }
         else if (key > r->key)
         {
@@ -197,8 +201,12 @@ private:
                 r->nbElements++;
                 return true;
             }
-            else
-                insert(r->right, key);
+            else{
+                if(insert(r->right, key)){
+                    r->nbElements++;
+                }
+                return true;
+            }
         }
         else if (key < r->key)
         {
@@ -209,12 +217,12 @@ private:
                 r->nbElements++;
                 return true;
             }
-            else
-                insert(r->left, key);
-        }
-        else
-        {
-            return false;
+            else{
+                if(insert(r->left, key)){
+                    r->nbElements++;
+                }
+                return true;
+            }
         }
     }
 
@@ -308,11 +316,14 @@ public:
         }
         while (noeud->left->left != nullptr)
         {
+            noeud->nbElements--;
             noeud = noeud->left;
         }
+        noeud->nbElements--;
         Node *temp = noeud->left;
         noeud->left = noeud->left->right;
         noeud = nullptr;
+       // _root->nbElements--;
         delete noeud;
         delete temp;
     };
@@ -342,6 +353,7 @@ private:
         }
         if (r->left != nullptr)
         {
+            r->nbElements--;
             return _minNode(r->left);
         }
         return r;
@@ -358,17 +370,21 @@ private:
     //
     static bool deleteElement(Node *&r, const_reference key) noexcept
     {
-        if (r == nullptr)
+        if (r == nullptr || !contains(r,key))
         {
             return false;
         }
-        if (key < r->key)
+        else if (key < r->key)
         {
-            return deleteElement(r->left, key);
+            if(deleteElement(r->left, key))
+                r->nbElements--;
+            return true;
         }
         else if (key > r->key)
         {
-            return deleteElement(r->right, key);
+            if(deleteElement(r->right, key))
+                r->nbElements--;
+            return true;
         }
         else if (r->key == key)
         {
@@ -377,27 +393,31 @@ private:
             {
                 std::swap(r, r->right);
                 delete tmp;
+                return true;
             }
             else if (r->right == nullptr)
             {
                 std::swap(r, r->left);
                 delete tmp;
+                return true;
             }
             else
             {
                 Node *&min = _minNode(r->right);
-
+                size_t nbElems = r->nbElements -1;
                 r = min;
                 min = min->right;
 
                 r->left = tmp->left;
                 r->right = tmp->right;
 
+                r->nbElements = nbElems;
+
                 delete tmp;
+                return true;
             }
-            return true;
         }
-        return false;
+        return true;
     }
 
 public:
@@ -408,8 +428,10 @@ public:
     //
     size_t size() const noexcept
     {
-        /* ... */
-        return 0;
+
+
+
+        return _root->nbElements;
     }
 
     //
