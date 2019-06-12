@@ -38,7 +38,7 @@ private:
         // ce noeud est la racine
 
         Node(const_reference key) // seul constructeur disponible. key est obligatoire
-            : key(key), right(nullptr), left(nullptr), nbElements(1)
+                : key(key), right(nullptr), left(nullptr), nbElements(1)
         {
             cout << "(C" << key << ") ";
         }
@@ -96,7 +96,12 @@ public:
         Node* root = nullptr;
         if(other._root){
             root = new Node(other._root->key);
-            copyTree(other._root,root);
+            try{
+                copyTree(other._root,root);
+            }catch(...){
+                deleteSubTree(root);
+                throw;
+            }
         }
         _root = root;
         return *this;
@@ -231,7 +236,7 @@ private:
         if(contains(r, key)){
             return false;
         }
-        //Si l'arbre est vide
+            //Si l'arbre est vide
         else if (r == nullptr)
         {
             r = new Node(key);
@@ -303,10 +308,10 @@ private:
             return false;
         else if (key == r->key)
             return true;
-        //si la valeur est plus grande que la clé de la racine on va verifier dans le sous arbre droit
+            //si la valeur est plus grande que la clé de la racine on va verifier dans le sous arbre droit
         else if (key > r->key)
             contains(r->right, key);
-        //Sinon dans le sous arbre gauche
+            //Sinon dans le sous arbre gauche
         else
             contains(r->left, key);
     }
@@ -368,7 +373,7 @@ public:
         Node *temp = noeud->left;
         noeud->left = noeud->left->right;
         noeud = nullptr;
-       // _root->nbElements--;
+        // _root->nbElements--;
         delete noeud;
         delete temp;
     };
@@ -519,11 +524,11 @@ private:
         if (n > nbElementsGauche) {
             return nth_element(r->right, n - nbElementsGauche - 1);
         }
-        //nième element dans le sous arbre droit
+            //nième element dans le sous arbre droit
         else if (n < nbElementsGauche) {
             return nth_element(r->left, n);
         }
-        //nième element est la racine
+            //nième element est la racine
         else {
             return r->key;
         }
@@ -570,10 +575,9 @@ private:
             }else{
                 return nbElementsGauche;
             }
-            return -1;
         }
         else{
-            return -1;
+            return (size_t)-1;
         }
     }
 
@@ -613,7 +617,14 @@ private:
     //
     static void linearize(Node *tree, Node *&list, size_t &cnt) noexcept
     {
-        /* ... */
+        if(tree){
+            linearize(tree->right, list, cnt);
+            tree->right = list;
+            list = tree;
+            list->nbElements = ++cnt;
+            linearize(tree->left, list, cnt);
+            tree->left = nullptr;
+        }
     }
 
 public:
@@ -648,6 +659,17 @@ private:
     //
     static void arborize(Node *&tree, Node *&list, size_t cnt) noexcept
     {
+        if(!cnt){
+            tree = nullptr;
+            return;
+        }
+        Node *rg = nullptr;
+        arborize(rg, list, (cnt - 1) / 2);
+        tree = list;
+        tree->nbElements = cnt;
+        tree->left = rg;
+        list = list->right;
+        arborize(tree->right, list, cnt / 2);
     }
 
 public:
